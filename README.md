@@ -11,7 +11,7 @@ Zeigt Guthaben, Speiseplan und Bestellstatus des Schul-Essensportals **WebMenü*
 3. Einstellungen → Geräte & Dienste → Integration hinzufügen → **Mensa Schule**.
 4. Benutzername und Passwort des WebMenü-Portals eingeben.
 
-Die Daten werden alle 30 Minuten abgerufen: die aktuelle Woche plus so viele Folgewochen, wie für die nächsten 7 Tage nötig sind. Um Mitternacht werden "heute" und "morgen" neu berechnet.
+Die Daten werden stündlich abgerufen: die aktuelle Woche plus so viele Folgewochen, wie für die nächsten 7 Tage nötig sind. Um Mitternacht werden "heute" und "morgen" neu berechnet.
 
 ## Entitäten
 

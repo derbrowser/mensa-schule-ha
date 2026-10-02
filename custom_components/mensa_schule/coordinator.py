@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class MensaCoordinator(DataUpdateCoordinator[MensaData]):
-    """Holt alle 30 Minuten Guthaben und Speiseplan; wirft um Mitternacht die Sensoren neu an."""
+    """Holt stündlich Guthaben und Speiseplan; wirft um Mitternacht die Sensoren neu an."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: MensaClient) -> None:
         super().__init__(
