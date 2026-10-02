@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mensa Schule",
+        "description": "Zugangsdaten des WebMenü-Portals (Pöschl Catering).",
+        "data": { "username": "Benutzername", "password": "Passwort" }
+      },
+      "reauth_confirm": {
+        "title": "Erneut anmelden",
+        "description": "Das Passwort für {username} funktioniert nicht mehr. Bitte neu eingeben.",
+        "data": { "password": "Passwort" }
+      }
+    },
+    "error": {
+      "invalid_auth": "Benutzername oder Passwort falsch.",
+      "cannot_connect": "Das Portal ist nicht erreichbar oder das Login-Formular wurde nicht erkannt.",
+      "unknown": "Unerwarteter Fehler."
+    },
+    "abort": {
+      "already_configured": "Dieser Benutzer ist bereits eingerichtet.",
+      "reauth_successful": "Neu angemeldet."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "balance": { "name": "Guthaben" },
+      "meal_today": { "name": "Essen heute" },
+      "meal_tomorrow": { "name": "Essen morgen" },
+      "next_order": { "name": "Nächste Bestellung" },
+      "next_open_day": { "name": "Nächster unbestellter Tag" },
+      "menu": { "name": "Speiseplan" }
+    },
+    "binary_sensor": {
+      "ordered_today": { "name": "Heute bestellt" },
+      "ordered_tomorrow": { "name": "Morgen bestellt" }
+    }
+  }
+}
