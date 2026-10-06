@@ -11,7 +11,7 @@ Zeigt Guthaben, Speiseplan und Bestellstatus des Schul-Essensportals **WebMenü*
 3. Einstellungen → Geräte & Dienste → Integration hinzufügen → **Mensa Schule**.
 4. Benutzername und Passwort des WebMenü-Portals eingeben.
 
-Die Daten werden stündlich abgerufen: die aktuelle Woche plus so viele Folgewochen, wie für die nächsten 7 Tage nötig sind. Um Mitternacht werden "heute" und "morgen" neu berechnet.
+Die Daten werden stündlich abgerufen: von Montag bis Freitag die aktuelle Woche, ab Samstag die Folgewoche. Verstrichene Tage werden verworfen. Die Woche wird gezielt über die Datumsauswahl des Portals angesteuert, unabhängig davon, welche Woche das Portal zuerst anzeigt. Um Mitternacht werden "heute" und "morgen" neu berechnet.
 
 ## Entitäten
 
@@ -24,7 +24,7 @@ Die Entitäts-IDs richten sich nach der Sprache deiner Installation, auf Deutsch
 | Heute bestellt / Morgen bestellt | Binärsensor, an wenn für den Tag etwas bestellt ist (Attribute `has_offer`, `orderable`, `meals`) |
 | Nächste Bestellung | Datum der nächsten bestellten Mahlzeit |
 | Nächster unbestellter Tag | nächster Tag mit Angebot, an dem noch bestellt werden kann und noch nichts bestellt ist (Attribut `open_days`) |
-| Speiseplan | Zustand = Zahl der Tage mit Angebot in den nächsten 7 Tagen; Attribut `days` mit allen Gerichten, Preisen und Bestellstatus |
+| Speiseplan | Zustand = Zahl der Tage mit Angebot im geladenen Zeitraum (höchstens die nächsten 7 Tage); Attribut `days` mit allen Gerichten, Preisen und Bestellstatus |
 
 "Bestellbar" (`orderable`) bedeutet: Die Bestellfrist des Portals ist für dieses Gericht noch nicht abgelaufen.
 

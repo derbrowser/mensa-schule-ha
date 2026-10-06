@@ -8,7 +8,7 @@ from datetime import date, timedelta
 
 import aiohttp
 
-from .const import BASE_URL, HORIZON_DAYS, LOGIN_URL, MAX_EXTRA_PAGES, MENU_URL
+from .const import BASE_URL, LOGIN_URL, MAX_EXTRA_PAGES, MENU_URL, NEXT_WEEK_FROM_WEEKDAY
 from .parser import (
     MealItem,
     MenuPage,
@@ -47,6 +47,18 @@ class MensaData:
         for it in sorted(self.items, key=lambda i: (i.day, i.group)):
             out.setdefault(it.day, []).append(it)
         return out
+
+
+def _monday(d: date) -> date:
+    return d - timedelta(days=d.weekday())
+
+
+def target_weeks(today: date) -> list[date]:
+    """Montage der Wochen, die geholt werden: Mo-Fr die aktuelle Woche, ab Samstag die nächste."""
+    monday = _monday(today)
+    if today.weekday() >= NEXT_WEEK_FROM_WEEKDAY:
+        return [monday + timedelta(days=7)]
+    return [monday]
 
 
 class MensaClient:
@@ -106,7 +118,12 @@ class MensaClient:
             return await resp.text()
 
     async def async_get_data(self, today: date) -> MensaData:
-        """Aktuelle Woche lesen und die Folgewochen per Datumsauswahl holen, bis HORIZON_DAYS abgedeckt sind."""
+        """Aktuelle Woche holen; ab Samstag stattdessen die Folgewoche.
+
+        Welche Woche das Portal beim ersten Aufruf zeigt, ist nicht festgelegt. Deshalb werden die
+        gewünschten Wochen immer gezielt über die Datumsauswahl angesteuert (vorwärts und rückwärts).
+        """
+        wanted = target_weeks(today)
         try:
             html = await self._get_menu()
             if is_login_page(html):
@@ -117,15 +134,16 @@ class MensaClient:
                     raise MensaAuthError("Speiseplan nach Login nicht erreichbar")
 
             self.last_lines = page_summary(html)
-            pages = [parse_menu_page(html)]
-            horizon = today + timedelta(days=HORIZON_DAYS - 1)
+            first = parse_menu_page(html)
+            pages = [first]
+            shown = _monday(first.week_start) if first.week_start else None
+            _LOGGER.debug("Portal zeigt Woche ab %s, gewünscht: %s", shown, wanted)
 
-            # Wochen gezielt per Datumsauswahl holen (">>" springt nicht verlässlich 1 Woche)
-            first = pages[0]
-            week = first.week_start or (today - timedelta(days=today.weekday()))
-            for _ in range(MAX_EXTRA_PAGES):
-                week += timedelta(days=7)
-                if week > horizon:
+            current = shown
+            for week in wanted:
+                if week == current:
+                    continue
+                if len(pages) > MAX_EXTRA_PAGES:
                     break
                 last = pages[-1]
                 payload = dict(last.fields)
@@ -133,14 +151,17 @@ class MensaClient:
                 if last.date_field:
                     payload[last.date_field] = week.strftime("%d.%m.%Y")
                     payload["__EVENTTARGET"] = last.date_field
-                elif last.next_target:
+                elif last.next_target and current is not None and week == current + timedelta(days=7):
                     payload["__EVENTTARGET"] = last.next_target
                 else:
-                    break
+                    _LOGGER.warning("Woche ab %s lässt sich nicht ansteuern (kein Datumsfeld)", week)
+                    continue
                 html = await self._post_menu(payload)
                 if is_login_page(html):
                     raise MensaConnectionError("Sitzung beim Blättern verloren")
-                pages.append(parse_menu_page(html))
+                page = parse_menu_page(html)
+                pages.append(page)
+                current = _monday(page.week_start) if page.week_start else week
         except (aiohttp.ClientError, TimeoutError) as err:
             raise MensaConnectionError(str(err)) from err
 
@@ -152,7 +173,8 @@ class MensaClient:
         items: dict[tuple, MealItem] = {}
         for p in pages:
             for it in p.items:
-                items[(it.day, it.group, it.name)] = it
+                if it.day >= today and _monday(it.day) in wanted:  # vergangene Tage und fremde Wochen verwerfen
+                    items[(it.day, it.group, it.name)] = it
         data = MensaData(balance=first.balance, account=first.account, items=list(items.values()))
         _LOGGER.debug(
             "Gelesen: Guthaben=%s, %d Gerichte an %d Tagen (%d Seiten)",
